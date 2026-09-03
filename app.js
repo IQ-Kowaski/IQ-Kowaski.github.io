@@ -17,7 +17,7 @@ const els = {
   sortSelect: $("sortSelect"), searchInput: $("searchInput"), forkToggle: $("forkToggle"),
   langBars: $("langBars"), topicRow: $("topicRow"), timeline: $("timeline"),
   eventCount: $("eventCount"), emptyState: $("emptyState"), toast: $("toast"),
-  aboutText: $("aboutText"), ossLine: $("ossLine"),
+  aboutText: $("aboutText"), ossLine: $("ossLine"), contactGrid: $("contactGrid"),
 };
 
 let state = { profile: null, repos: [], events: [], includeForks: true };
@@ -80,6 +80,35 @@ function renderProfile(p) {
   els.statReposSub.textContent = `updated ${timeAgo(p.updated_at)}`;
   els.accountAge.textContent = `on GitHub since ${new Date(p.created_at).getFullYear()}`;
   els.ossLine.textContent = `${p.public_repos} public repositories and counting.`;
+  renderContact(p);
+}
+
+const CONTACT_ICONS = {
+  github: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.15c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.35.77 1.05.77 2.12v3.14c0 .3.21.67.8.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>',
+  web: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.9 5.7 3.9 9S14.5 18.4 12 21c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3z"/></svg>',
+  x: '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3l-4.9-6.4L6.4 22H3.3l7.3-8.3L1.6 2H8l4.4 5.9L18.9 2zm-1.1 17.8h1.7L7.1 3.9H5.3l12.5 15.9z"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>',
+};
+function contactCard({ icon, title, sub, href }) {
+  return `<a class="contact-card" href="${href}" ${href.startsWith("http") ? 'target="_blank" rel="noopener"' : ""}>
+    <span class="contact-icon">${CONTACT_ICONS[icon]}</span>
+    <span class="contact-text"><strong>${title}</strong><small>${escapeHtml(sub)}</small></span>
+    <svg class="contact-go" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
+  </a>`;
+}
+function renderContact(p) {  if (!els.contactGrid) return;
+  const cards = [{ icon: "github", title: "GitHub", sub: `@${p.login}`, href: p.html_url }];
+  if (p.blog) {
+    const url = p.blog.startsWith("http") ? p.blog : `https://${p.blog}`;
+    cards.push({ icon: "web", title: "Website", sub: p.blog.replace(/^https?:\/\//, ""), href: url });
+  }
+  if (p.twitter_username) {
+    cards.push({ icon: "x", title: "X (Twitter)", sub: `@${p.twitter_username}`, href: `https://x.com/${p.twitter_username}` });
+  }
+  if (p.email) {
+    cards.push({ icon: "mail", title: "Email", sub: p.email, href: `mailto:${p.email}` });
+  }
+  els.contactGrid.innerHTML = cards.map(contactCard).join("");
 }
 
 function repoCard(r) {
@@ -100,6 +129,7 @@ function repoCard(r) {
     </div>
     <div class="repo-links">
       <a class="mini-btn primary" href="${r.html_url}" target="_blank" rel="noopener">Code</a>
+      <button class="mini-btn" data-readme="${escapeHtml(r.name)}" data-url="${r.html_url}">Details</button>
       ${r.homepage ? `<a class="mini-btn" href="${r.homepage.startsWith("http") ? r.homepage : "https://" + r.homepage}" target="_blank" rel="noopener">Live demo</a>` : `<a class="mini-btn" href="${r.html_url}/archive/refs/heads/${r.default_branch}.zip">Download</a>`}
     </div>
   </article>`;
@@ -203,6 +233,72 @@ async function sync(manual = false) {
   }
 }
 
+/* ---------- github stat images (theme-aware) ---------- */
+const STAT_THEMES = {
+  light: { bg: "e0e5ec", title: "2f54eb", text: "263040", icon: "2f54eb", border: "a8b5c9" },
+  dark: { bg: "171b22", title: "8fa4ff", text: "eef2f8", icon: "8fa4ff", border: "232a36" },
+};
+function renderStatImages() {
+  const theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+  const c = STAT_THEMES[theme];
+  const base = `bg_color=${c.bg}&title_color=${c.title}&text_color=${c.text}&icon_color=${c.icon}&border_color=${c.border}&hide_border=true`;
+  const urls = {
+    stats: `https://github-readme-stats.vercel.app/api?username=${USERNAME}&show_icons=true&include_all_commits=true&${base}`,
+    streak: `https://github-readme-streak-stats.herokuapp.com?user=${USERNAME}&hide_border=true&background=${c.bg}&ring=${c.title}&fire=${c.title}&currStreakNum=${c.text}&sideNums=${c.text}&currStreakLabel=${c.title}&sideLabels=${c.text}&dates=${c.text}`,
+    langs: `https://github-readme-stats.vercel.app/api/top-langs/?username=${USERNAME}&layout=compact&${base}`,
+  };
+  document.querySelectorAll("img[data-stat]").forEach((img) => {
+    const kind = img.getAttribute("data-stat");
+    if (urls[kind] && img.src !== urls[kind]) img.src = urls[kind];
+    img.onerror = () => { const fig = img.closest(".stat-img"); if (fig) fig.style.display = "none"; };
+  });
+}
+
+/* ---------- readme deep-dive ---------- */
+const readmeCache = {};
+function sanitizeReadme(html) {
+  return html.replace(/<script[\s\S]*?<\/script\s*>/gi, "").replace(/\son\w+\s*=\s*(['"]).*?\1/gi, "");
+}
+function renderMarkdown(md) {
+  if (window.marked) return sanitizeReadme(window.marked.parse(md));
+  return `<pre style="white-space:pre-wrap">${escapeHtml(md.slice(0, 4000))}</pre>`;
+}
+async function openReadme(name, url) {
+  const modal = $("readmeModal");
+  if (!modal) return;
+  $("readmeTitle").textContent = name;
+  $("readmeSub").textContent = `github.com/${USERNAME}/${name}`;
+  $("readmeOpen").href = url;
+  $("readmeBody").innerHTML = `<p class="muted">Loading README…</p>`;
+  modal.classList.remove("hidden");
+  document.body.classList.add("readme-open");
+  const cached = readmeCache[name] || JSON.parse(localStorage.getItem(`loop-readme-${name}`) || "null");
+  if (cached && Date.now() - cached.at < 24 * 3600 * 1000) {
+    readmeCache[name] = cached;
+    $("readmeBody").innerHTML = renderMarkdown(cached.text);
+    return;
+  }
+  try {
+    const r = await fetch(`${API}/repos/${USERNAME}/${name}/readme`, { headers: { Accept: "application/vnd.github.raw" } });
+    if (!r.ok) throw new Error(`README ${r.status}`);
+    const text = await r.text();
+    readmeCache[name] = { at: Date.now(), text };
+    try { localStorage.setItem(`loop-readme-${name}`, JSON.stringify(readmeCache[name])); } catch (_) {}
+    $("readmeBody").innerHTML = renderMarkdown(text);
+    $("readmeBody").scrollTop = 0;
+  } catch (err) {
+    const repo = state.repos.find((x) => x.name === name);
+    const desc = (repo && repo.description) || "No README in this repository yet.";
+    $("readmeBody").innerHTML = `<p>${escapeHtml(desc)}</p><p class="muted">Open it on GitHub to see the code.</p>`;
+  }
+}
+function closeReadme() {
+  const modal = $("readmeModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  document.body.classList.remove("readme-open");
+}
+
 /* ---------- theme / ui ---------- */
 function initTheme() {
   const saved = localStorage.getItem("loop-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
@@ -213,6 +309,7 @@ function initUI() {
     const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
     document.documentElement.dataset.theme = next;
     localStorage.setItem("loop-theme", next);
+    renderStatImages();
   };
   $("refreshBtn").onclick = () => sync(true);
   $("refreshBtn2").onclick = () => sync(true);
@@ -251,6 +348,16 @@ function initUI() {
   els.searchInput.oninput = applyFilters;
   els.langFilter.onchange = applyFilters;
   els.sortSelect.onchange = applyFilters;
+  els.repoGrid.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-readme]");
+    if (btn) openReadme(btn.getAttribute("data-readme"), btn.getAttribute("data-url"));
+  });
+  $("readmeClose").addEventListener("click", closeReadme);
+  $("readmeBackdrop").addEventListener("click", closeReadme);
+  document.addEventListener("keydown", (e) => {
+    const m = $("readmeModal");
+    if (e.key === "Escape" && m && !m.classList.contains("hidden")) closeReadme();
+  });
   $("resetFilters").onclick = () => { els.searchInput.value = ""; els.langFilter.value = ""; els.sortSelect.value = "updated"; state.includeForks = true; els.forkToggle.setAttribute("aria-pressed", "true"); applyFilters(); };
   els.forkToggle.onclick = () => {
     state.includeForks = !state.includeForks;
@@ -263,5 +370,5 @@ function initUI() {
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
 }
 
-initTheme(); initUI(); sync(false);
+initTheme(); initUI(); renderStatImages(); sync(false);
 setInterval(() => sync(false), 5 * 60 * 1000); // background auto-refresh

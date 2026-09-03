@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://iq-kowaski.github.io/sitemap.xml
