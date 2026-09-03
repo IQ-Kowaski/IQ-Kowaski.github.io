@@ -19,9 +19,11 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
+img{max-width:100%}
 body{
   margin:0; font-family:'Inter',system-ui,sans-serif; color:var(--text);
   background:var(--bg); min-height:100vh; overflow-x:hidden;
+  -webkit-text-size-adjust:100%;
   transition:background .35s ease,color .35s ease;
 }
 .bg-orb{position:fixed;border-radius:50%;filter:blur(110px);opacity:.35;pointer-events:none;z-index:0}
@@ -132,8 +134,8 @@ main{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:96px 16p
 .chip.active{box-shadow:inset 4px 4px 9px var(--inset-sd),inset -4px -4px 9px var(--inset-sl);color:var(--accent)}
 
 /* repos */
-.repo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
-.repo-card{padding:20px;display:flex;flex-direction:column;gap:12px;transition:transform .18s ease}
+.repo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:18px}
+.repo-card{padding:20px;display:flex;flex-direction:column;gap:12px;transition:transform .18s ease;min-width:0}
 .repo-card:hover{transform:translateY(-3px)}
 .repo-top{display:flex;justify-content:space-between;align-items:start;gap:10px}
 .repo-name{font-weight:800;font-size:1.02rem;margin:0;word-break:break-word}
@@ -209,16 +211,76 @@ h1,h2,h3{color:var(--text)}
   .hero-grid,.duo,.about-grid{grid-template-columns:1fr}
   .nav-links{display:none}.menu-btn{display:inline-flex}
 }
-@media(max-width:640px){
-  main{padding:90px 12px 30px}
-  .nav-wrap{padding:0 12px}
-  .repo-grid{grid-template-columns:1fr}
-  .profile-top{flex-direction:column}
-  .btn-label{display:none}
-  .toolbar{padding:16px}
-}
 @media(min-width:1600px){
   main{max-width:1520px}
   .nav{width:min(1520px,100%)}
   .mobile-menu{width:min(1520px,100%)}
+}
+
+/* ---- mobile: tight, no overflow, thumb-friendly ---- */
+@media(max-width:640px){
+  main{padding:84px 10px 28px}
+  .nav-wrap{top:8px;padding:0 10px}
+  .nav{gap:8px;padding:8px 10px;border-radius:18px;min-width:0}
+  .brand{gap:8px;min-width:0;flex:1}
+  .brand-mark{width:36px;height:36px;flex-shrink:0}
+  .brand-text{min-width:0}
+  .brand-text strong{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand-text small{font-size:.66rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .live-dot{display:none}
+  .nav-actions{gap:7px;margin-left:0;flex-shrink:0}
+  .neu-btn,.icon-btn{padding:9px 10px;border-radius:12px}
+  .btn-label{display:none}
+  #githubBtn{padding:9px 11px;font-size:0;gap:0}
+  #githubBtn svg{width:18px;height:18px}
+  .mobile-menu.open{flex-direction:column;align-items:stretch}
+  .mobile-menu a{padding:12px 14px}
+
+  .hero{margin-top:2px}
+  .neu-flat{box-shadow:5px 5px 12px var(--sd),-5px -5px 12px var(--sl)}
+  .hero-grid,.duo{grid-template-columns:1fr;gap:14px}
+  .about-grid{grid-template-columns:1fr;gap:16px}
+  .profile-card{padding:18px 16px;border-radius:20px}
+  .profile-top{flex-direction:row;gap:14px;align-items:center}
+  .avatar-ring{width:84px;height:84px;border-radius:24px;padding:5px;flex-shrink:0}
+  .avatar-ring img{border-radius:18px}
+  .avatar-status{width:14px;height:14px;bottom:6px;right:6px;border-width:2px}
+  .profile-card h1{font-size:1.65rem}
+  .eyebrow{font-size:.66rem}
+  .bio{font-size:.92rem}
+  .handle{font-size:.84rem;margin:4px 0 8px}
+  .profile-meta{padding:12px;margin:14px 0;gap:8px 12px}
+  .meta-item{font-size:.8rem}
+  .mono{overflow-wrap:anywhere;word-break:break-word}
+  .about-card ol .mono{font-size:.74rem}
+  .profile-actions{flex-direction:column;align-items:stretch}
+  .cta-btn.large,.neu-btn.large{width:100%;justify-content:center;padding:13px 16px}
+  .hero-side{gap:14px}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:12px}
+  .stat{padding:14px;border-radius:18px}
+  .stat-num{font-size:1.35rem}
+  .spotlight{padding:18px 16px}
+  .toolbar{padding:18px 16px;margin:16px 0 14px;flex-direction:column;align-items:stretch}
+  .toolbar-controls{flex-direction:column;align-items:stretch;width:100%}
+  .search{min-width:0;width:100%}
+  .select{width:100%}
+  #forkToggle{width:100%;justify-content:center}
+  .repo-grid{grid-template-columns:1fr;gap:14px}
+  .repo-card{padding:18px 16px}
+  .repo-top{flex-wrap:wrap}
+  .panel{padding:18px 16px}
+  .lang-row{grid-template-columns:88px 1fr 40px;font-size:.78rem}
+  .timeline{max-height:none}
+  .about{padding:18px 16px}
+  .about-list li{flex-direction:column;gap:2px}
+  .about-list strong{min-width:0}
+  .about-actions .neu-btn,.about-actions .cta-btn{width:100%;justify-content:center}
+  .toast{left:10px;right:10px;transform:none;width:auto;text-align:center}
+  section{scroll-margin-top:90px}
+}
+@media(max-width:380px){
+  .stats-grid{gap:10px}
+  .stat{padding:12px}
+  .stat-num{font-size:1.2rem}
+  .brand-text small{display:none}
 }
