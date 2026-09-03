@@ -218,6 +218,26 @@ function initUI() {
   $("refreshBtn2").onclick = () => sync(true);
   const mSync = $("mobileSyncBtn");
   if (mSync) mSync.onclick = () => { $("mobileMenu").classList.remove("open"); sync(true); };
+  // avatar lightbox
+  const ring = $("avatarRing"), box = $("lightbox");
+  const openBox = () => {
+    const base = (state.profile && state.profile.avatar_url) || els.avatar.src.split("&s=")[0];
+    $("lightboxImg").src = `${base}${base.includes("?") ? "&" : "?"}s=640`;
+    const nm = (state.profile && (state.profile.name || state.profile.login)) || "Loop";
+    $("lightboxName").textContent = nm;
+    $("lightboxSub").textContent = `@${(state.profile && state.profile.login) || USERNAME}`;
+    $("lightboxImg").alt = `Enlarged GitHub profile photo of ${nm}`;
+    box.classList.remove("hidden");
+    document.body.classList.add("lightbox-open");
+  };
+  const closeBox = () => { box.classList.add("hidden"); document.body.classList.remove("lightbox-open"); };
+  if (ring && box) {
+    ring.onclick = openBox;
+    ring.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openBox(); } };
+    $("lightboxClose").onclick = closeBox;
+    $("lightboxBackdrop").onclick = closeBox;
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !box.classList.contains("hidden")) closeBox(); });
+  }
   $("copyBtn").onclick = async () => {
     try { await navigator.clipboard.writeText(`https://github.com/${USERNAME}`); toast("Profile URL copied."); }
     catch { toast(`Profile URL: github.com/${USERNAME}`); }
