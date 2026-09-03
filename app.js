@@ -7,7 +7,7 @@ const els = {
   avatar: $("avatar"), brandAvatar: $("brandAvatar"), displayName: $("displayName"),
   brandName: $("brandName"), brandSub: $("brandSub"), profileLink: $("profileLink"),
   bioText: $("bioText"), locationText: $("locationText"), lastPush: $("lastPush"),
-  blogText: $("blogText"), syncLabel: $("syncLabel"), lastSync: $("lastSync"),
+  blogText: $("blogText"), lastSync: $("lastSync"),
   footSync: $("footSync"), statRepos: $("statRepos"), statStars: $("statStars"),
   statForks: $("statForks"), statFollowers: $("statFollowers"), statFollowingSub: $("statFollowingSub"),
   statReposSub: $("statReposSub"), accountAge: $("accountAge"), spotName: $("spotName"),
@@ -178,7 +178,6 @@ function renderEvents(events) {
 /* ---------- sync ---------- */
 async function sync(manual = false) {
   try {
-    els.syncLabel.textContent = manual ? "Syncing…" : "Connecting to GitHub…";
     const [profile, repos, events] = await Promise.all([
       fetchJSON(`${API}/users/${USERNAME}`),
       fetchJSON(`${API}/users/${USERNAME}/repos?sort=updated&per_page=100`),
@@ -188,7 +187,6 @@ async function sync(manual = false) {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), profile, repos, events }));
     renderProfile(profile); renderRepos(repos); renderEvents(events);
     const when = new Date().toLocaleTimeString();
-    els.syncLabel.textContent = "Live — synced just now";
     els.lastSync.textContent = when;
     els.footSync.textContent = `synced ${when}`;
     if (manual) toast("Synced with GitHub — everything is up to date.");
@@ -198,10 +196,8 @@ async function sync(manual = false) {
     if (cached) {
       const { profile, repos, events } = JSON.parse(cached);
       renderProfile(profile); renderRepos(repos); renderEvents(events || []);
-      els.syncLabel.textContent = "Offline — showing last cached sync";
       toast("GitHub API unreachable — showing cached data.");
     } else {
-      els.syncLabel.textContent = "Could not reach GitHub API";
       els.repoGrid.innerHTML = `<p class="muted" style="grid-column:1/-1">Rate-limited or offline. Wait a minute and press Sync. (${escapeHtml(err.message)})</p>`;
     }
   }
