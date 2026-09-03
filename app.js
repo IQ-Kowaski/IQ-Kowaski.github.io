@@ -220,6 +220,8 @@ function initUI() {
   };
   $("refreshBtn").onclick = () => sync(true);
   $("refreshBtn2").onclick = () => sync(true);
+  const mSync = $("mobileSyncBtn");
+  if (mSync) mSync.onclick = () => { $("mobileMenu").classList.remove("open"); sync(true); };
   $("copyBtn").onclick = async () => {
     try { await navigator.clipboard.writeText(`https://github.com/${USERNAME}`); toast("Profile URL copied."); }
     catch { toast(`Profile URL: github.com/${USERNAME}`); }
